@@ -1,0 +1,13 @@
+/ {
+    behaviors {
+        /omit-if-no-ref/ gp_axis: hid_io_gamepad_axis {
+            compatible = "zmk,behavior-hid-io-gamepad-axis";
+            #binding-cells = <2>;
+        };
+
+        /omit-if-no-ref/ gp_btn: hid_io_gamepad_button {
+            compatible = "zmk,behavior-hid-io-gamepad-button";
+            #binding-cells = <1>;
+        };
+    };
+};

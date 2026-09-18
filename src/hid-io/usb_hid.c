@@ -49,6 +49,14 @@ static int get_report_cb(const struct device *dev, struct usb_setup_packet *setu
     }
 
     switch (setup->wValue & HID_GET_REPORT_ID_MASK) {
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+    case ZMK_HID_REPORT_ID__IO_GAMEPAD: {
+        struct zmk_hid_gamepad_report *report = zmk_hid_get_gamepad_report();
+        *data = (uint8_t *)report;
+        *len = sizeof(*report);
+        break;
+    }
+#endif
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
     case ZMK_HID_REPORT_ID__IO_JOYSTICK: {
         struct zmk_hid_joystick_report_alt *report = zmk_hid_get_joystick_report_alt();
@@ -140,6 +148,13 @@ static int zmk_usb_hid_send_report_alt(const uint8_t *report, size_t len) {
         return err;
     }
 }
+
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+int zmk_usb_hid_send_gamepad_report(void) {
+    struct zmk_hid_gamepad_report *report = zmk_hid_get_gamepad_report();
+    return zmk_usb_hid_send_report_alt((uint8_t *)report, sizeof(*report));
+}
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
 
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 int zmk_usb_hid_send_joystick_report_alt() {

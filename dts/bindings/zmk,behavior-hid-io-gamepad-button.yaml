@@ -1,0 +1,5 @@
+description: HID gamepad button behavior
+
+compatible: "zmk,behavior-hid-io-gamepad-button"
+
+include: one_param.yaml

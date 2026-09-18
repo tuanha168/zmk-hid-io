@@ -8,6 +8,10 @@
 
 #include <stdint.h>
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+int zmk_usb_hid_send_gamepad_report(void);
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 int zmk_usb_hid_send_joystick_report_alt(void);
 #endif // IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)

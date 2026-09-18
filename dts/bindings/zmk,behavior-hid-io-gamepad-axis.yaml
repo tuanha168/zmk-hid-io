@@ -1,0 +1,5 @@
+description: HID gamepad digital axis behavior
+
+compatible: "zmk,behavior-hid-io-gamepad-axis"
+
+include: two_param.yaml

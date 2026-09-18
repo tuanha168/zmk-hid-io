@@ -3,6 +3,8 @@ zephyr_library()
 if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
   zephyr_library_sources_ifdef(CONFIG_ZMK_BEHAVIOR_HID_IO_KEY_PRESS src/behaviors/behavior_hid_io_key_press.c)
+  zephyr_library_sources_ifdef(CONFIG_ZMK_BEHAVIOR_HID_IO_GAMEPAD_AXIS src/behaviors/behavior_hid_io_gamepad_axis.c)
+  zephyr_library_sources_ifdef(CONFIG_ZMK_BEHAVIOR_HID_IO_GAMEPAD_BUTTON src/behaviors/behavior_hid_io_gamepad_button.c)
   zephyr_library_sources_ifdef(CONFIG_ZMK_INPUT_BEHAVIOR_FWD_TO_HID_IO src/behaviors/input_behavior_fwd_to_hid_io.c)
   zephyr_library_sources_ifdef(CONFIG_ZMK_INPUT_PROCESSOR_FWD_TO_HID_IO src/behaviors/input_processor_fwd_to_hid_io.c)
 
@@ -10,6 +12,7 @@ if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/endpoints.c)
   
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hid_joystick.c)
+  zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO_GAMEPAD src/hid-io/hid_gamepad.c)
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hid_mouse.c)
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hid_output.c)
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hid_volume_knob.c)

@@ -17,6 +17,11 @@ config ZMK_HID_IO_JOYSTICK
     bool "Enable HID I/O Joystick"
     default n
 
+config ZMK_HID_IO_GAMEPAD
+    bool "Enable HID I/O USB Gamepad"
+    depends on ZMK_HID_IO && ZMK_USB
+    default n
+
 config ZMK_HID_IO_OUTPUT
     bool "Enable HID I/O Output"
     default n
@@ -61,3 +66,13 @@ DT_COMPAT_ZMK_BEHAVIOR_HID_IO_KEY_PRESS := zmk,behavior-hid-io-key-press
 config ZMK_BEHAVIOR_HID_IO_KEY_PRESS
     bool
     default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_HID_IO_KEY_PRESS))
+
+DT_COMPAT_ZMK_BEHAVIOR_HID_IO_GAMEPAD_AXIS := zmk,behavior-hid-io-gamepad-axis
+config ZMK_BEHAVIOR_HID_IO_GAMEPAD_AXIS
+    bool
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_HID_IO_GAMEPAD_AXIS))
+
+DT_COMPAT_ZMK_BEHAVIOR_HID_IO_GAMEPAD_BUTTON := zmk,behavior-hid-io-gamepad-button
+config ZMK_BEHAVIOR_HID_IO_GAMEPAD_BUTTON
+    bool
+    default $(dt_compat_enabled,$(DT_COMPAT_ZMK_BEHAVIOR_HID_IO_GAMEPAD_BUTTON))
