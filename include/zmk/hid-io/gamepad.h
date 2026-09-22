@@ -20,3 +20,4 @@ int zmk_hid_gamepad_axis_press(uint8_t axis, uint8_t direction);
 int zmk_hid_gamepad_axis_release(uint8_t axis, uint8_t direction);
 int zmk_hid_gamepad_button_press(uint8_t button);
 int zmk_hid_gamepad_button_release(uint8_t button);
+void zmk_hid_gamepad_right_stick_set(int16_t x, int16_t y);

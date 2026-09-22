@@ -90,6 +90,11 @@ int zmk_hid_gamepad_button_release(uint8_t button) {
     return 0;
 }
 
+void zmk_hid_gamepad_right_stick_set(int16_t x, int16_t y) {
+    gamepad_report.body.rx = CLAMP(x, -127, 127);
+    gamepad_report.body.ry = CLAMP(y, -127, 127);
+}
+
 struct zmk_hid_gamepad_report *zmk_hid_get_gamepad_report(void) {
     return &gamepad_report;
 }

@@ -24,6 +24,11 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/hid-io/hid.h>
 #endif
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+#include <zmk/hid-io/gamepad.h>
+#include <zmk/hid-io/usb_hid.h>
+#endif
+
 // #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
 enum zip_hid_io_usage {
@@ -31,6 +36,7 @@ enum zip_hid_io_usage {
     ZIP_HID_IO_USAGE_FWD_TO_MOUSE,
     ZIP_HID_IO_USAGE_FWD_TO_JOYSTICK,
     ZIP_HID_IO_USAGE_FWD_TO_VOLUME_KNOB,
+    ZIP_HID_IO_USAGE_FWD_TO_GAMEPAD,
     ZIP_HID_IO_USAGE__MAX__,
 };
 
@@ -52,6 +58,9 @@ struct zip_fwd_to_hid_io_xy_data {
 
 struct zip_fwd_to_hid_io_data {
     const struct device *dev;
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+    struct k_work_delayable gamepad_neutral_work;
+#endif
     union {
         struct {
             struct zip_fwd_to_hid_io_xy_data data;
@@ -61,6 +70,13 @@ struct zip_fwd_to_hid_io_data {
         } fwdr;
     };
 };
+
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+static void gamepad_neutral_work_handler(struct k_work *work) {
+    zmk_hid_gamepad_right_stick_set(0, 0);
+    zmk_usb_hid_send_gamepad_report();
+}
+#endif
 
 static void handle_rel_code(const struct zip_fwd_to_hid_io_config *config,
                             struct zip_fwd_to_hid_io_data *data, struct input_event *event) {
@@ -212,6 +228,18 @@ static int zip_handle_event(const struct device *dev, struct input_event *event,
         }
     #endif
 
+    #if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+        if (config->usage == ZIP_HID_IO_USAGE_FWD_TO_GAMEPAD &&
+            data->fwdr.data.mode == HID_IO_XY_DATA_MODE_REL) {
+            zmk_hid_gamepad_right_stick_set(
+                data->fwdr.data.x * CONFIG_ZMK_HID_IO_GAMEPAD_POINTER_SCALE,
+                data->fwdr.data.y * CONFIG_ZMK_HID_IO_GAMEPAD_POINTER_SCALE);
+            zmk_usb_hid_send_gamepad_report();
+            k_work_reschedule(&data->gamepad_neutral_work,
+                              K_MSEC(CONFIG_ZMK_HID_IO_GAMEPAD_POINTER_TIMEOUT_MS));
+        }
+    #endif
+
 #endif
 
         clear_xy_data(&data->fwdr.data);
@@ -233,6 +261,9 @@ static struct zmk_input_processor_driver_api zip_driver_api = {
 static int zip_init(const struct device *dev) {
     struct zip_fwd_to_hid_io_data *data = dev->data;
     data->dev = dev;
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+    k_work_init_delayable(&data->gamepad_neutral_work, gamepad_neutral_work_handler);
+#endif
     return 0;
 };
 

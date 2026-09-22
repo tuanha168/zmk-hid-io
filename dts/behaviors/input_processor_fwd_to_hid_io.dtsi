@@ -10,4 +10,10 @@
         #input-processor-cells = <0>;
         usage = <0>; // enum hid_io_usage: { 0:disabled, 1:mouse, 2:joystick, 3:vol knob }
     };
+
+    /omit-if-no-ref/ zipftgp: input_processor_fwd_to_hid_io_gamepad {
+        compatible = "zmk,input-processor-fwd-to-hid-io";
+        #input-processor-cells = <0>;
+        usage = <4>;
+    };
 };

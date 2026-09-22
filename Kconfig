@@ -22,6 +22,16 @@ config ZMK_HID_IO_GAMEPAD
     depends on ZMK_HID_IO && ZMK_USB
     default n
 
+config ZMK_HID_IO_GAMEPAD_POINTER_SCALE
+    int "Gamepad right stick pointer scale"
+    depends on ZMK_HID_IO_GAMEPAD
+    default 8
+
+config ZMK_HID_IO_GAMEPAD_POINTER_TIMEOUT_MS
+    int "Gamepad right stick neutral timeout in milliseconds"
+    depends on ZMK_HID_IO_GAMEPAD
+    default 40
+
 config ZMK_HID_IO_OUTPUT
     bool "Enable HID I/O Output"
     default n
