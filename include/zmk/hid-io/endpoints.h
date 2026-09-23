@@ -8,6 +8,10 @@
 
 #include <zmk/endpoints.h>
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+int zmk_endpoints_send_gamepad_report(void);
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 int zmk_endpoints_send_joystick_report_alt();
 #endif // IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)

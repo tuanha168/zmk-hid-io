@@ -4,8 +4,8 @@
 #include <drivers/behavior.h>
 
 #include <zmk/behavior.h>
+#include <zmk/hid-io/endpoints.h>
 #include <zmk/hid-io/gamepad.h>
-#include <zmk/hid-io/usb_hid.h>
 
 #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
 
@@ -18,7 +18,7 @@ static int on_pressed(struct zmk_behavior_binding *binding,
         return err;
     }
 
-    zmk_usb_hid_send_gamepad_report();
+    zmk_endpoints_send_gamepad_report();
     return ZMK_BEHAVIOR_OPAQUE;
 }
 
@@ -29,7 +29,7 @@ static int on_released(struct zmk_behavior_binding *binding,
         return err;
     }
 
-    zmk_usb_hid_send_gamepad_report();
+    zmk_endpoints_send_gamepad_report();
     return ZMK_BEHAVIOR_OPAQUE;
 }
 

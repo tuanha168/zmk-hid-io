@@ -26,7 +26,6 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
 #include <zmk/hid-io/gamepad.h>
-#include <zmk/hid-io/usb_hid.h>
 #endif
 
 // #if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
@@ -74,7 +73,7 @@ struct zip_fwd_to_hid_io_data {
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
 static void gamepad_neutral_work_handler(struct k_work *work) {
     zmk_hid_gamepad_right_stick_set(0, 0);
-    zmk_usb_hid_send_gamepad_report();
+    zmk_endpoints_send_gamepad_report();
 }
 #endif
 
@@ -234,7 +233,7 @@ static int zip_handle_event(const struct device *dev, struct input_event *event,
             zmk_hid_gamepad_right_stick_set(
                 data->fwdr.data.x * CONFIG_ZMK_HID_IO_GAMEPAD_POINTER_SCALE,
                 data->fwdr.data.y * CONFIG_ZMK_HID_IO_GAMEPAD_POINTER_SCALE);
-            zmk_usb_hid_send_gamepad_report();
+            zmk_endpoints_send_gamepad_report();
             k_work_reschedule(&data->gamepad_neutral_work,
                               K_MSEC(CONFIG_ZMK_HID_IO_GAMEPAD_POINTER_TIMEOUT_MS));
         }

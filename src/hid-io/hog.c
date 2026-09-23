@@ -57,6 +57,15 @@ static struct hids_report output_indicators = {
 
 #endif // IS_ENABLED(CONFIG_ZMK_HID_IO_OUTPUT)
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
+static struct hids_report gamepad_input = {
+    .id = ZMK_HID_REPORT_ID__IO_GAMEPAD,
+    .type = HIDS_INPUT,
+};
+
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 
 static struct hids_report joystick_input = {
@@ -135,6 +144,17 @@ static ssize_t write_hids_output_report(struct bt_conn *conn, const struct bt_ga
 
 #endif // IS_ENABLED(CONFIG_ZMK_HID_IO_OUTPUT)
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+size_t bt_gatt_char_offset_gamepad = 0;
+static ssize_t read_hids_gamepad_input_report(struct bt_conn *conn,
+                                              const struct bt_gatt_attr *attr, void *buf,
+                                              uint16_t len, uint16_t offset) {
+    struct zmk_hid_gamepad_report_body *report_body = &zmk_hid_get_gamepad_report()->body;
+    return bt_gatt_attr_read(conn, attr, buf, len, offset, report_body,
+                             sizeof(struct zmk_hid_gamepad_report_body));
+}
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 size_t bt_gatt_char_offset_joystick = 0;
 static ssize_t read_hids_joystick_input_report(struct bt_conn *conn, const struct bt_gatt_attr *attr,
@@ -190,6 +210,14 @@ BT_GATT_SERVICE_DEFINE(
     BT_GATT_CHARACTERISTIC(BT_UUID_HIDS_REPORT_MAP, BT_GATT_CHRC_READ, BT_GATT_PERM_READ_ENCRYPT,
                            read_hids_report_map, NULL, NULL),
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+    BT_GATT_CHARACTERISTIC(BT_UUID_HIDS_REPORT, BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+                           BT_GATT_PERM_READ_ENCRYPT, read_hids_gamepad_input_report, NULL, NULL),
+    BT_GATT_CCC(input_ccc_changed, BT_GATT_PERM_READ_ENCRYPT | BT_GATT_PERM_WRITE_ENCRYPT),
+    BT_GATT_DESCRIPTOR(BT_UUID_HIDS_REPORT_REF, BT_GATT_PERM_READ_ENCRYPT, read_hids_report_ref,
+                       NULL, &gamepad_input),
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
     BT_GATT_CHARACTERISTIC(BT_UUID_HIDS_REPORT, BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
                            BT_GATT_PERM_READ_ENCRYPT, read_hids_joystick_input_report, NULL, NULL),
@@ -244,6 +272,59 @@ struct bt_conn *destination_connection_alt(void) {
 K_THREAD_STACK_DEFINE(hog_alt_q_stack, CONFIG_ZMK_BLE_THREAD_STACK_SIZE);
 
 struct k_work_q hog_alt_work_q;
+
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
+K_MSGQ_DEFINE(zmk_hog_gamepad_msgq, sizeof(struct zmk_hid_gamepad_report_body),
+              CONFIG_ZMK_HID_IO_BLE_GAMEPAD_REPORT_QUEUE_SIZE, 4);
+
+void send_gamepad_report_callback(struct k_work *work) {
+    struct zmk_hid_gamepad_report_body report;
+    while (k_msgq_get(&zmk_hog_gamepad_msgq, &report, K_NO_WAIT) == 0) {
+        struct bt_conn *conn = destination_connection_alt();
+        if (conn == NULL) {
+            return;
+        }
+
+        struct bt_gatt_notify_params notify_params = {
+            .attr = &hog_svc_alt.attrs[bt_gatt_char_offset_gamepad],
+            .data = &report,
+            .len = sizeof(report),
+        };
+
+        int err = bt_gatt_notify_cb(conn, &notify_params);
+        if (err == -EPERM) {
+            bt_conn_set_security(conn, BT_SECURITY_L2);
+        } else if (err) {
+            LOG_DBG("Error notifying gamepad report: %d", err);
+        }
+
+        bt_conn_unref(conn);
+    }
+}
+
+K_WORK_DEFINE(hog_alt_gamepad_work, send_gamepad_report_callback);
+
+int zmk_hog_send_gamepad_report(struct zmk_hid_gamepad_report_body *report) {
+    int err = k_msgq_put(&zmk_hog_gamepad_msgq, report, K_MSEC(100));
+    if (err) {
+        switch (err) {
+        case -EAGAIN: {
+            LOG_WRN("gamepad message queue full, popping first message and queueing again");
+            struct zmk_hid_gamepad_report_body discarded_report;
+            k_msgq_get(&zmk_hog_gamepad_msgq, &discarded_report, K_NO_WAIT);
+            return zmk_hog_send_gamepad_report(report);
+        }
+        default:
+            LOG_WRN("Failed to queue gamepad report to send (%d)", err);
+            return err;
+        }
+    }
+
+    k_work_submit_to_queue(&hog_alt_work_q, &hog_alt_gamepad_work);
+    return 0;
+}
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
 
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 
@@ -412,6 +493,12 @@ static int zmk_hog_init(void) {
     for (size_t i = 0; i < hog_svc_alt.attr_count; i++) {
         // scan the cb from output of BT_GATT_CHARACTERISTIC() macros,
         // each output inserts 2 elements into attrs array, so we minus one the offset.
+
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+        if (hog_svc_alt.attrs[i].read == read_hids_gamepad_input_report) {
+            bt_gatt_char_offset_gamepad = i - 1;
+        }
+#endif
 
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
         if (hog_svc_alt.attrs[i].read == read_hids_joystick_input_report) {

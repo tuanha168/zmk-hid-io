@@ -23,6 +23,46 @@ struct zmk_endpoint_instance zmk_endpoint_get_selected(void) {
 }
 #endif
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+int zmk_endpoints_send_gamepad_report(void) {
+    struct zmk_endpoint_instance current_instance = zmk_endpoint_get_selected();
+
+    switch (current_instance.transport) {
+#if IS_ENABLED(CONFIG_ZMK_USB)
+    case ZMK_TRANSPORT_USB: {
+        int err = zmk_usb_hid_send_gamepad_report();
+        if (err) {
+            LOG_ERR("FAILED TO SEND GAMEPAD OVER USB: %d", err);
+        }
+        return err;
+    }
+#else
+    case ZMK_TRANSPORT_USB: break;
+#endif /* IS_ENABLED(CONFIG_ZMK_USB) */
+
+#if IS_ENABLED(CONFIG_ZMK_BLE)
+    case ZMK_TRANSPORT_BLE: {
+        struct zmk_hid_gamepad_report *gamepad_report = zmk_hid_get_gamepad_report();
+        int err = zmk_hog_send_gamepad_report(&gamepad_report->body);
+        if (err) {
+            LOG_ERR("FAILED TO SEND GAMEPAD OVER HOG: %d", err);
+        }
+        return err;
+    }
+#else
+    case ZMK_TRANSPORT_BLE: break;
+#endif /* IS_ENABLED(CONFIG_ZMK_BLE) */
+
+#ifdef ZMK_ENDPOINT_NONE_COUNT
+    case ZMK_TRANSPORT_NONE: return 0;
+#endif
+    }
+
+    LOG_ERR("Unsupported endpoint transport %d", current_instance.transport);
+    return -ENOTSUP;
+}
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 int zmk_endpoints_send_joystick_report_alt() {
     struct zmk_endpoint_instance current_instance = zmk_endpoint_get_selected();

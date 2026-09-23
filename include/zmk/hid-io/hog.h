@@ -11,6 +11,10 @@
 
 #include <zmk/hid-io/hid.h>
 
+#if IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+int zmk_hog_send_gamepad_report(struct zmk_hid_gamepad_report_body *body);
+#endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
+
 #if IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
 int zmk_hog_send_joystick_report_alt(struct zmk_hid_joystick_report_body_alt *body);
 #endif // IS_ENABLED(CONFIG_ZMK_HID_IO_JOYSTICK)
