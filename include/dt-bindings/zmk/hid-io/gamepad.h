@@ -2,6 +2,8 @@
 
 #define GP_LX 0
 #define GP_LY 1
+#define GP_DPAD_X 2
+#define GP_DPAD_Y 3
 
 #define GP_NEG 0
 #define GP_POS 1

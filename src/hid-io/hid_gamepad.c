@@ -9,6 +9,7 @@
 
 static struct zmk_hid_gamepad_report gamepad_report = {
     .report_id = ZMK_HID_REPORT_ID__IO_GAMEPAD,
+    .body.hat_switch = 8,
 };
 
 static uint8_t axis_press_counts[ZMK_HID_GAMEPAD_AXIS_COUNT]
@@ -26,11 +27,26 @@ static int8_t axis_value(uint8_t axis) {
     return negative ? -127 : 127;
 }
 
+static void update_dpad(void) {
+    int8_t x = axis_value(ZMK_HID_GAMEPAD_AXIS_DPAD_X);
+    int8_t y = axis_value(ZMK_HID_GAMEPAD_AXIS_DPAD_Y);
+
+    if (y < 0) {
+        gamepad_report.body.hat_switch = x > 0 ? 1 : x < 0 ? 7 : 0;
+    } else if (y > 0) {
+        gamepad_report.body.hat_switch = x > 0 ? 3 : x < 0 ? 5 : 4;
+    } else {
+        gamepad_report.body.hat_switch = x > 0 ? 2 : x < 0 ? 6 : 8;
+    }
+}
+
 static void update_axis(uint8_t axis) {
     if (axis == ZMK_HID_GAMEPAD_AXIS_LX) {
         gamepad_report.body.x = axis_value(axis);
-    } else {
+    } else if (axis == ZMK_HID_GAMEPAD_AXIS_LY) {
         gamepad_report.body.y = axis_value(axis);
+    } else {
+        update_dpad();
     }
 }
 

@@ -85,6 +85,16 @@ static const uint8_t zmk_hid_report_desc_alt[] = {
     HID_REPORT_SIZE(0x01),
     HID_REPORT_COUNT(ZMK_HID_GAMEPAD_NUM_BUTTONS),
     HID_INPUT(ZMK_HID_MAIN_VAL_DATA | ZMK_HID_MAIN_VAL_VAR | ZMK_HID_MAIN_VAL_ABS),
+    HID_USAGE_PAGE(HID_USAGE_GD),
+    HID_USAGE(0x39), /* Hat Switch */
+    HID_LOGICAL_MIN8(0x00),
+    HID_LOGICAL_MAX8(0x07),
+    HID_REPORT_SIZE(0x04),
+    HID_REPORT_COUNT(0x01),
+    HID_INPUT(0x42), /* Data | Variable | Absolute | Null State */
+    HID_REPORT_SIZE(0x04),
+    HID_REPORT_COUNT(0x01),
+    HID_INPUT(0x01), /* Constant padding */
     HID_END_COLLECTION,
 #endif // IS_ENABLED(CONFIG_ZMK_HID_IO_GAMEPAD)
 

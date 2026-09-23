@@ -8,6 +8,7 @@ struct zmk_hid_gamepad_report_body {
     int8_t rx;
     int8_t ry;
     uint16_t buttons;
+    uint8_t hat_switch;
 } __packed;
 
 struct zmk_hid_gamepad_report {
