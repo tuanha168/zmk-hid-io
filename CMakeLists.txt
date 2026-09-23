@@ -17,7 +17,7 @@ if ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hid_output.c)
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hid_volume_knob.c)
 
-  if (CONFIG_ZMK_BLE)
+  if (CONFIG_ZMK_BLE AND NOT CONFIG_ZMK_HID_IO_GAMEPAD)
     zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/hog.c)
   endif()
   zephyr_library_sources_ifdef(CONFIG_ZMK_HID_IO src/hid-io/usb_hid.c)
