@@ -10,7 +10,10 @@
 #include <zmk/hog.h>
 
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/util.h>
 LOG_MODULE_DECLARE(hid_io, CONFIG_ZMK_HID_IO_LOG_LEVEL);
+
+#include <dt-bindings/zmk/hid-io/gamepad.h>
 
 #include <zmk/hid-io/endpoints.h>
 #include <zmk/hid-io/hid.h>
@@ -43,7 +46,16 @@ int zmk_endpoints_send_gamepad_report(void) {
 #if IS_ENABLED(CONFIG_ZMK_BLE)
     case ZMK_TRANSPORT_BLE: {
         struct zmk_hid_gamepad_report *gamepad_report = zmk_hid_get_gamepad_report();
-        int err = zmk_hog_send_gamepad_report(&gamepad_report->body);
+        struct zmk_hid_gamepad_report_body report_body = gamepad_report->body;
+
+        /* Android maps generic BLE buttons 4 and 5 opposite to desktop USB. */
+        bool north_pressed = report_body.buttons & BIT(GP_NORTH);
+        bool west_pressed = report_body.buttons & BIT(GP_WEST);
+
+        WRITE_BIT(report_body.buttons, GP_NORTH, west_pressed);
+        WRITE_BIT(report_body.buttons, GP_WEST, north_pressed);
+
+        int err = zmk_hog_send_gamepad_report(&report_body);
         if (err) {
             LOG_ERR("FAILED TO SEND GAMEPAD OVER HOG: %d", err);
         }
